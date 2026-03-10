@@ -33,7 +33,7 @@ options. To aid in designing such programs, `clojure.tools.cli/parse-opts`
 accepts an `:in-order` option that directs it to stop processing arguments at
 the first unrecognized token.
 
-_As of 1.4.next, the `:in-order` option is deprecated and replaced by the `:subcommand` option with values `:explicit` and `:implicit`._
+_As of 1.4.256, the `:in-order` option is deprecated and replaced by the `:subcommand` option with values `:explicit` and `:implicit`._
 
 For instance, the `git` program has a set of top-level options that are
 unrecognized by subcommands and vice-versa:
@@ -55,6 +55,8 @@ When :in-order is true however, the arguments are interpreted as:
 Note that the options to `log` are not parsed, but remain in the unprocessed
 arguments vector. These options could be handled by another call to
 `parse-opts` from within the function that handles the `log` subcommand.
+
+_As of 1.4.256, use `:subcommand :explicit` to get this behavior instead._
 
 ### Options Summary
 
