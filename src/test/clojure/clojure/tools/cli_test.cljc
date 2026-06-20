@@ -67,18 +67,18 @@
             :long-opt "--[no-]foo"})))
   (testing "throws AssertionError on unset :id, duplicate :short-opt or :long-opt,
             multiple :default(-fn) entries per :id, or both :assoc-fn/:update-fn present"
-    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default)
+    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default :rust Exception)
                  (compile-option-specs [["-a" :id nil]])))
-    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default)
+    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default :rust Exception)
                  (compile-option-specs [{:id :a :short-opt "-a"} {:id :b :short-opt "-a"}])))
-    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default)
+    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default :rust Exception)
                  (compile-option-specs [{:id :alpha :long-opt "--alpha"} {:id :beta :long-opt "--alpha"}])))
-    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default)
+    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default :rust Exception)
                  (compile-option-specs [{:id :alpha :default 0} {:id :alpha :default 1}])))
-    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default)
+    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default :rust Exception)
                  (compile-option-specs [{:id :alpha :default-fn (constantly 0)}
                                         {:id :alpha :default-fn (constantly 1)}])))
-    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default)
+    (is (thrown? #?(:clj AssertionError :cljr Exception :cljs :default :rust Exception)
                  (compile-option-specs [{:id :alpha :assoc-fn assoc :update-fn identity}]))))
   (testing "desugars `--long-opt=value`"
     (is (= (map (juxt :id :long-opt :required)
@@ -110,6 +110,8 @@
                         :cljr (binding [*err* *out*]
                                 (compile-option-specs [[nil "--alpha" :validate nil :flag true]]))
                         :cljs (binding [*print-err-fn* *print-fn*]
+                                (compile-option-specs [[nil "--alpha" :validate nil :flag true]]))
+                        :rust (binding [*err* *out*]
                                 (compile-option-specs [[nil "--alpha" :validate nil :flag true]]))))))
       (is (re-find #"Warning:.* :validate"
                    (with-out-str
@@ -118,6 +120,8 @@
                         :cljr (binding [*err* *out*]
                                (compile-option-specs [{:id :alpha :validate nil}]))
                         :cljs (binding [*print-err-fn* *print-fn*]
+                                (compile-option-specs [{:id :alpha :validate nil}]))
+                        :rust (binding [*err* *out*]
                                 (compile-option-specs [{:id :alpha :validate nil}])))))))))
 
 (defn has-error? [re coll]
@@ -126,6 +130,8 @@
 (defn parse-int [x]
   #?(:clj  (Integer/parseInt x)
      :cljr (Int32/Parse x)
+     :rust (or (parse-long x)
+               (throw (ex-info (str "Not a number: " x) {})))
      :cljs (do (assert (re-seq #"^\d" x))
                (js/parseInt x))))
 

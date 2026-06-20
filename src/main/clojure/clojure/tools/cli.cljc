@@ -6,9 +6,9 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns ^{:author "Gareth Jones, Sung Pae, Sean Corfield"
-      :doc "Tools for working with command line arguments."}
-  clojure.tools.cli
+(ns clojure.tools.cli
+  "Tools for working with command line arguments."
+  {:author "Gareth Jones, Sung Pae, Sean Corfield"}
   (:require [clojure.string :as s]
             #?(:cljs goog.string.format)))
 
@@ -95,7 +95,7 @@
           #?(:clj  (binding [*out* *err*] (println msg))
              :cljr (binding [*out* *err*] (println msg))
              :cljs (binding [*print-fn* *print-err-fn*] (println msg))
-		     :rust (binding [*out* *err*] (println msg)))))))
+             :rust (binding [*out* *err*] (println msg)))))))
 
   (select-keys map spec-keys))
 
@@ -238,7 +238,7 @@
   (let [{:keys [validate-fn validate-msg]} spec]
     (or (loop [[vfn & vfns] validate-fn [msg & msgs] validate-msg]
           (when vfn
-            (if (try (vfn value) (catch #?(:clj Throwable :cljr Exception :cljs :default) _))
+            (if (try (vfn value) (catch #?(:clj Throwable :cljr Exception :cljs :default :rust Exception) _))
               (recur vfns msgs)
               [::error (validation-error value opt optarg msg)])))
         [value nil])))
@@ -248,7 +248,7 @@
         [value error] (if parse-fn
                         (try
                           [(parse-fn value) nil]
-                          (catch #?(:clj Throwable :cljr Exception :cljs :default) e
+                          (catch #?(:clj Throwable :cljr Exception :cljs :default :rust Exception) e
                             [nil (parse-error opt optarg (str e))]))
                         [value nil])]
     (cond error
@@ -715,7 +715,8 @@
           (and (opt? opt) (nil? spec))
           (throw #?(:clj  (Exception. (str "'" opt "' is not a valid argument"))
                     :cljr (Exception. (str "'" opt "' is not a valid argument"))
-                    :cljs (js/Error. (str "'" opt "' is not a valid argument"))))
+                    :cljs (js/Error. (str "'" opt "' is not a valid argument"))
+                    :rust (Exception. (str "'" opt "' is not a valid argument"))))
 
           (and (opt? opt) (spec :flag))
           (recur ((spec :assoc-fn) options (spec :name) (flag-for opt))
