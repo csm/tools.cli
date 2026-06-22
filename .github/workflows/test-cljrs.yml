@@ -1,0 +1,33 @@
+name: Test (cljrs)
+
+permissions:
+  contents: read
+
+on: [pull_request]
+
+jobs:
+  test-cljrs:
+    runs-on: ubuntu-latest
+    env:
+      CLJRS_VERSION: "0.1.173"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: cargo-cljrs-${{ env.CLJRS_VERSION }}
+
+      - name: Install cljrs
+        run: cargo install cljrs --version "$CLJRS_VERSION"
+
+      - name: Run tests (interpreter + AOT)
+        run: ./run-cljrs-tests.sh

@@ -5,6 +5,8 @@
 
 (defn parse-int [x]
   #?(:clj  (Integer/parseInt x)
+     :rust (or (parse-long x)
+               (throw (ex-info (str "Not a number: " x) {})))
      :cljs (do (assert (re-seq #"^\d" x))
                (js/parseInt x))))
 
